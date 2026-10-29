@@ -1,28 +1,25 @@
-# Relatório de Turno — versão para iPhone
+# Relatórios de Operação — atualização v2
 
-## O que está incluído
-- Formulário baseado no modelo de relatório enviado.
-- Seleção dos turnos A, B e C e passagem automática A → B → C → A.
-- Cálculo do total dos estoques (confira a escala/unidade usada pela empresa).
-- Geração do relatório com formatação do WhatsApp.
-- Cópia do texto e menu de compartilhamento do iPhone.
-- Salvamento automático do rascunho e histórico local.
-- Exportação/importação de backup JSON.
-- Cache para uso offline depois da primeira instalação/carregamento.
+## Novidades
+- Tela inicial para escolher Relatório de Turno ou Relatório de 2 Horas.
+- Cada modelo lembra separadamente os últimos valores preenchidos, apenas no aparelho e navegador em uso.
+- Relatório de Turno: total de estoque sem casas decimais (ex.: 30.244.903 t).
+- Relatório de 2 Horas: total com três casas decimais (ex.: 31.296,581 t).
+- Data do Relatório de Turno atualizada ao abrir e ao voltar ao aplicativo.
+- Histórico separado por modelo, backup JSON de ambos, e migração dos dados locais da versão anterior.
+- Cache offline atualizado.
 
-## Como testar no computador
-Abra `index.html` num navegador para conferir o layout e o gerador. O modo offline/PWA e o Service Worker exigem hospedagem HTTPS ou servidor local; abrir diretamente como `file://` não ativa todos os recursos.
-
-## Como disponibilizar para iPhone
-1. Publique os arquivos deste pacote em uma hospedagem estática que forneça HTTPS (por exemplo, GitHub Pages ou outro host estático).
-2. Abra o endereço HTTPS no Safari do iPhone com internet.
-3. Aguarde a página carregar completamente pelo menos uma vez.
-4. No Safari, toque em Compartilhar → Adicionar à Tela de Início.
-5. Abra pelo ícone e teste com internet antes de depender do modo offline.
+## Atualizar GitHub Pages
+Envie os arquivos desta pasta para a RAIZ do repositório `relatorio-turno` no GitHub:
+`index.html`, `app.js`, `sw.js`, `manifest.webmanifest`, `README.md`, `icon-192.png`, `icon-512.png`.
+No GitHub: Add file > Upload files > arraste os arquivos > Commit changes.
+Quando perguntar se deseja substituir arquivos de mesmo nome, confirme. Não envie a pasta ou o ZIP inteiro.
+O endereço público continua o mesmo: https://pedroassano95-cmd.github.io/relatorio-turno/
 
 ## Importante
-- Este pacote ainda precisa ser hospedado em HTTPS para instalar como PWA no iPhone. O arquivo ZIP sozinho não instala o app.
-- Os dados ficam no armazenamento local do Safari/Web App deste aparelho; não sincronizam com os aparelhos dos colegas.
-- Não limpe os dados do site/navegador sem antes exportar um backup.
-- O envio ao WhatsApp não é automático; o app gera/copia o texto e o usuário confirma o envio.
-- Verifique a escala dos estoques DA01/DA02: o app soma os números informados interpretando ponto como milhar quando há vírgula decimal. Confirme com o padrão operacional da usina antes de usar em relatórios oficiais.
+Os dados são salvos localmente por origem/navegador, sem contas ou sincronização.
+Atualizar os arquivos no GitHub não apaga normalmente os dados locais, mas exporte um backup antes de atualizar.
+Não apague os dados do Safari/app instalado, pois isso pode eliminar os relatórios locais.
+Ao publicar a atualização, conecte o iPhone à internet, abra o app, feche e reabra para receber a nova versão.
+No relatório de 2 horas, a entrada DA01 954.601 é interpretada como 954,601 t (exemplo do usuário); DA02 30.341,980 é interpretada como 30.341,980 t, resultando em 31.296,581 t. Valores com um único ponto e três dígitos após ele são tratados como decimais no relatório simples. Confira entradas ambíguas.
+Confira a unidade e escala operacional antes de enviar.

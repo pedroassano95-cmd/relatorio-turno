@@ -1,16 +1,9 @@
 <!doctype html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#166534">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Relatório Turno">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icon-192.png">
-<title>Relatório de Turno</title>
-<style>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#166534"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="Relatórios">
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png">
+<title>Relatórios de Operação</title><style>
 :root{color-scheme:light;--green:#166534;--green2:#14532d;--bg:#f3f5f3;--ink:#17231a;--muted:#647067;--line:#dce3dd;--white:#fff}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
 header{background:var(--green);color:white;padding:22px 18px 20px;border-radius:0 0 22px 22px}header h1{font-size:23px;margin:0 0 4px}header p{margin:0;opacity:.88;font-size:14px}
@@ -24,12 +17,26 @@ input,select,textarea{width:100%;font:inherit;border:1px solid #cbd5cd;border-ra
 .note{font-size:12px;color:var(--muted);margin-top:8px}.status{font-size:13px;color:var(--green);min-height:20px;margin-top:8px}.history-item{border:1px solid var(--line);padding:12px;border-radius:10px;margin-top:8px;display:flex;justify-content:space-between;gap:8px;align-items:center}.history-item button{border:0;border-radius:8px;padding:8px;background:#e7eee8;color:var(--green2);font-weight:650}
 footer{text-align:center;color:var(--muted);font-size:12px;padding:0 18px 24px}
 @media(max-width:390px){.grid{gap:9px}.card{padding:13px}.actions{grid-template-columns:1fr}.checks{grid-template-columns:1fr}}
-</style>
-</head>
-<body>
-<header><h1>Relatório de Turno</h1><p>Preencha os dados, gere o texto e copie para o WhatsApp.</p></header>
+
+[hidden]{display:none!important}
+.choice{display:block;width:100%;border:1px solid var(--line);background:#fff;border-radius:15px;padding:20px;text-align:left;margin:12px 0;cursor:pointer;color:var(--ink);font:inherit}
+.choice strong{display:block;font-size:18px;margin-bottom:5px}
+.choice span{font-size:13px;color:var(--muted)}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
+.smallbutton{border:0;background:#e7eee8;color:var(--green2);border-radius:9px;padding:10px;font-weight:650}
+.report-tag{font-size:12px;color:var(--muted)}
+</style></head>
+<body><header><h1>Relatórios de Operação</h1><p>Escolha o modelo, preencha e envie pelo WhatsApp.</p></header>
 <main>
-<form id="reportForm">
+<div id="home">
+<section class="card"><h2>Qual relatório deseja preencher?</h2>
+<button type="button" class="choice" data-open="full"><strong>📋 Relatório de Turno</strong><span>Relatório completo dos turnos A, B e C</span></button>
+<button type="button" class="choice" data-open="simple"><strong>🕑 Relatório de 2 Horas</strong><span>Carregamento, estoques e transferência interna</span></button>
+<p class="note">Cada aparelho mantém seus próprios últimos dados. Os dois modelos são salvos separadamente.</p></section>
+</div>
+<div id="workspace" hidden>
+<div class="topbar"><button class="smallbutton" type="button" id="back">← Escolher relatório</button><span class="report-tag" id="reportLabel"></span></div>
+<form id="fullForm" hidden>
 <section class="card">
 <h2>1. Dados do turno</h2>
 <div class="grid">
@@ -83,25 +90,47 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:0 18px 24px}
 <div class="field"><label for="events">Uma ocorrência por linha</label><textarea id="events" rows="7" placeholder="Descreva ocorrências e atividades, uma por linha"></textarea></div>
 <div class="field"><label for="handover">Passagem de turno</label><select id="handover"><option value="auto">Automática (A → B → C → A)</option><option value="none">Não incluir passagem de turno</option></select></div>
 </section>
-<div class="actions">
-<button type="button" class="primary" id="generate">Gerar relatório</button>
-<button type="button" class="secondary" id="copy">Copiar texto</button>
+</form>
+<form id="simpleForm" hidden>
+<section class="card"><h2>1. Carregamento de açúcar</h2>
+<div class="field"><label>Turno</label><div class="turns" role="group" aria-label="Turno do relatório de 2 horas">
+<button type="button" data-simple-turn="A" class="active">Turno A</button>
+<button type="button" data-simple-turn="B">Turno B</button>
+<button type="button" data-simple-turn="C">Turno C</button></div></div>
+<div class="grid">
+<div class="field"><label for="sVehicles">Veículos no turno</label><input id="sVehicles" inputmode="numeric" placeholder="Ex.: 00"></div>
+<div class="field"><label for="sTonnes">Toneladas no turno (t)</label><input id="sTonnes" inputmode="decimal" placeholder="Ex.: 0"></div>
+<div class="field"><label for="sQueue">Veículos na fila monitorada</label><input id="sQueue" inputmode="numeric" placeholder="Ex.: 0"></div>
+<div class="field"><label for="sDayVehicles">Total de veículos no dia</label><input id="sDayVehicles" inputmode="numeric" placeholder="Ex.: 00"></div>
 </div>
+<div class="field"><label for="sDayTonnes">Total de toneladas no dia (t)</label><input id="sDayTonnes" inputmode="decimal" placeholder="Ex.: 0"></div>
+<div class="field"><label for="sBiomass">Carregamento de biomassa</label><input id="sBiomass" placeholder="Ex.: Carregamento Suspenso"></div>
+</section>
+<section class="card"><h2>2. Estoques</h2>
+<div class="grid">
+<div class="field"><label for="sDa01">Estoque DA01 (t)</label><input id="sDa01" inputmode="decimal" placeholder="Ex.: 954.601"></div>
+<div class="field"><label for="sDa02">Estoque DA02 (t)</label><input id="sDa02" inputmode="decimal" placeholder="Ex.: 30.341,980"></div>
+</div>
+<div class="field"><label for="sStockTotal">Total (t) — três casas decimais</label><input id="sStockTotal" readonly placeholder="Calculado automaticamente"></div>
+<p class="note">No relatório de 2 horas, DA01 como 954.601 significa 954,601 t; DA02 como 30.341,980 significa 30.341,980 t. Confira a escala antes de enviar.</p>
+</section>
+<section class="card"><h2>3. Transferência vira interno DA01 para DA02</h2>
+<div class="field"><label for="sTrips">Número de viagens</label><input id="sTrips" inputmode="numeric" placeholder="Ex.: 0"></div>
+</section>
+</form>
+<div class="actions"><button type="button" class="primary" id="generate">Gerar relatório</button>
+<button type="button" class="secondary" id="copy">Copiar texto</button></div>
 <div class="status" id="status" aria-live="polite"></div>
-<section class="card" style="margin-top:13px">
-<h2>Prévia do relatório</h2><div id="preview">Seu relatório aparecerá aqui quando você tocar em “Gerar relatório”.</div>
+<section class="card" style="margin-top:13px"><h2>Prévia do relatório</h2>
+<div id="preview">Toque em “Gerar relatório” para ver o texto.</div>
 <button type="button" class="secondary wide" id="share">Compartilhar…</button>
-<button type="button" class="secondary wide" id="save">Salvar no histórico deste iPhone</button>
-</section>
-<section class="card">
-<h2>Histórico local</h2><p class="note">Fica salvo apenas neste aparelho e navegador. Exportar uma cópia é recomendado para backup.</p>
-<div class="actions"><button type="button" class="secondary" id="export">Exportar backup</button><button type="button" class="secondary" id="importBtn">Importar backup</button></div>
+<button type="button" class="secondary wide" id="save">Salvar no histórico deste aparelho</button></section>
+<section class="card"><h2>Histórico local</h2>
+<p class="note">Os relatórios ficam apenas neste aparelho. Faça backup antes de limpar os dados do navegador.</p>
+<div class="actions"><button type="button" class="secondary" id="export">Exportar backup</button>
+<button type="button" class="secondary" id="importBtn">Importar backup</button></div>
 <input type="file" id="importFile" accept="application/json,.json" hidden>
-<div id="history"></div>
-<button type="button" class="danger wide" id="clearHistory">Apagar histórico</button>
-</section>
-</main>
-<footer>Os dados ficam neste aparelho. O envio ao WhatsApp é manual: revise o relatório antes de compartilhar.</footer>
-<script src="app.js"></script>
-</body>
-</html>
+<div id="history"></div><button type="button" class="danger wide" id="clearHistory">Apagar histórico deste modelo</button></section>
+</div></main>
+<footer>Os dados ficam somente neste aparelho e neste aplicativo. Revise o relatório antes de enviar.</footer>
+<script src="app.js?v=2"></script></body></html>
