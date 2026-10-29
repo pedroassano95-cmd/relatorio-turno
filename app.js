@@ -31,7 +31,7 @@ function calc(){
  const full=num($("da01").value)+num($("da02").value);
  const simple=stockNumber($("sDa01").value,"simple")+stockNumber($("sDa02").value,"simple");
  $("stockTotal").value=Number.isFinite(full)?fmt(full,0):"";
- $("sStockTotal").value=Number.isFinite(simple)?fmt(simple,3):"";
+ $("sStockTotal").value=Number.isFinite(simple)?fmt(simple,0):"";
 }
 function data(type){
  const d={turn:turn[type]};
