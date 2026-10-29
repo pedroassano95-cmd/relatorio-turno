@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#166534">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Relatório Turno">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Relatório de Turno</title>
+<style>
+:root{color-scheme:light;--green:#166534;--green2:#14532d;--bg:#f3f5f3;--ink:#17231a;--muted:#647067;--line:#dce3dd;--white:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+header{background:var(--green);color:white;padding:22px 18px 20px;border-radius:0 0 22px 22px}header h1{font-size:23px;margin:0 0 4px}header p{margin:0;opacity:.88;font-size:14px}
+main{max-width:720px;margin:0 auto;padding:14px 14px 32px}.card{background:var(--white);border:1px solid var(--line);border-radius:17px;padding:16px;margin:0 0 13px;box-shadow:0 2px 8px #17231a08}
+h2{font-size:17px;margin:0 0 14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{margin:0 0 12px}.field:last-child{margin-bottom:0}label{display:block;font-size:13px;font-weight:650;margin-bottom:6px;color:#39463c}
+input,select,textarea{width:100%;font:inherit;border:1px solid #cbd5cd;border-radius:10px;padding:11px 12px;background:white;color:var(--ink);min-height:44px}textarea{resize:vertical;min-height:76px}input:focus,select:focus,textarea:focus{outline:2px solid #86b99a;outline-offset:1px}
+.turns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.turns button{border:1px solid var(--line);border-radius:10px;padding:11px;background:#f1f4f1;font:inherit;font-weight:650;color:var(--ink)}.turns button.active{background:var(--green);color:white;border-color:var(--green)}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:10px}.check{display:flex;align-items:center;gap:8px;font-size:14px}.check input{width:20px;min-height:20px;height:20px;accent-color:var(--green)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.primary,.secondary,.danger{border:0;border-radius:12px;padding:13px 12px;font:inherit;font-weight:700;cursor:pointer;min-height:48px}.primary{background:var(--green);color:white}.secondary{background:#e7eee8;color:var(--green2)}.danger{background:#fff0ef;color:#9f2727}.wide{width:100%;margin-top:9px}
+#preview{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;background:#f7f8f7;border:1px solid var(--line);padding:13px;border-radius:12px;max-height:440px;overflow:auto}
+.note{font-size:12px;color:var(--muted);margin-top:8px}.status{font-size:13px;color:var(--green);min-height:20px;margin-top:8px}.history-item{border:1px solid var(--line);padding:12px;border-radius:10px;margin-top:8px;display:flex;justify-content:space-between;gap:8px;align-items:center}.history-item button{border:0;border-radius:8px;padding:8px;background:#e7eee8;color:var(--green2);font-weight:650}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:0 18px 24px}
+@media(max-width:390px){.grid{gap:9px}.card{padding:13px}.actions{grid-template-columns:1fr}.checks{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><h1>Relatório de Turno</h1><p>Preencha os dados, gere o texto e copie para o WhatsApp.</p></header>
+<main>
+<form id="reportForm">
+<section class="card">
+<h2>1. Dados do turno</h2>
+<div class="grid">
+<div class="field"><label for="date">Data</label><input id="date" type="date" required></div>
+<div class="field"><label for="dds">DDS</label><input id="dds" placeholder="Tema de segurança"></div>
+</div>
+<div class="field"><label>Turno</label><div class="turns" role="group" aria-label="Turno">
+<button type="button" data-turn="A" class="active">Turno A</button><button type="button" data-turn="B">Turno B</button><button type="button" data-turn="C">Turno C</button>
+</div></div>
+<div class="field"><label for="cota">Cota programada (t)</label><input id="cota" placeholder="Ex.: 500"></div>
+</section>
+<section class="card">
+<h2>2. Carregamento e produção</h2>
+<div class="grid">
+<div class="field"><label for="vehicles">Veículos no turno</label><input id="vehicles" placeholder="Ex.: 08"></div>
+<div class="field"><label for="tonnes">Expedido no turno (t)</label><input id="tonnes" placeholder="Ex.: 354.840"></div>
+<div class="field"><label for="dayVehicles">Veículos no dia</label><input id="dayVehicles" placeholder="Ex.: 13"></div>
+<div class="field"><label for="dayTonnes">Toneladas no dia</label><input id="dayTonnes" placeholder="Ex.: 592.420"></div>
+</div>
+<div class="field"><label for="biomass">Carregamento de biomassa</label><select id="biomass"><option>Suspenso</option><option>Em andamento</option><option>Concluído</option><option>Não realizado</option></select></div>
+<div class="field"><label for="production">Produção do turno</label><input id="production" placeholder="Ex.: 125.175"></div>
+</section>
+<section class="card">
+<h2>3. Estoques</h2>
+<div class="grid">
+<div class="field"><label for="da01">Estoque DA01 (t)</label><input id="da01" placeholder="Ex.: 1.292,531"></div>
+<div class="field"><label for="da02">Estoque DA02 (t)</label><input id="da02" placeholder="Ex.: 27.507,420"></div>
+</div>
+<div class="field"><label for="stockTotal">Total em estoque (t)</label><input id="stockTotal" readonly placeholder="Calculado automaticamente"></div>
+<p class="note">O cálculo soma os valores interpretando ponto como separador de milhar e vírgula como decimal. Confira se a unidade e a escala dos valores de DA01/DA02 estão corretas antes de enviar.</p>
+</section>
+<section class="card">
+<h2>4. Operação</h2>
+<div class="field"><label for="milling">Moagem</label><textarea id="milling" placeholder="Situação da moenda e do difusor"></textarea></div>
+<div class="field"><label for="belts">Esteiras</label><textarea id="belts" placeholder="Situação das esteiras"></textarea></div>
+<div class="field"><label>Limpeza do setor</label><div class="checks" id="cleanChecks">
+<label class="check"><input type="checkbox" data-clean="Sala de Op DA02" checked> Sala de Op DA02</label>
+<label class="check"><input type="checkbox" data-clean="Túnel" checked> Túnel</label>
+<label class="check"><input type="checkbox" data-clean="Móvel" checked> Móvel</label>
+<label class="check"><input type="checkbox" data-clean="Balança de fluxo" checked> Balança de fluxo</label>
+<label class="check"><input type="checkbox" data-clean="Conteiner" checked> Conteiner</label>
+</div></div>
+<div class="grid">
+<div class="field"><label for="color">Análise VHP — Cor</label><input id="color" placeholder="Ex.: 737"></div>
+<div class="field"><label for="ashes">Cinzas</label><input id="ashes" placeholder="Ex.: 0,9"></div>
+</div>
+<div class="field"><label for="humidity">Umidade</label><input id="humidity" placeholder="Ex.: 0.03"></div>
+</section>
+<section class="card">
+<h2>5. Ocorrências e atividades</h2>
+<div class="field"><label for="events">Uma ocorrência por linha</label><textarea id="events" rows="7" placeholder="Descreva ocorrências e atividades, uma por linha"></textarea></div>
+<div class="field"><label for="handover">Passagem de turno</label><select id="handover"><option value="auto">Automática (A → B → C → A)</option><option value="none">Não incluir passagem de turno</option></select></div>
+</section>
+<div class="actions">
+<button type="button" class="primary" id="generate">Gerar relatório</button>
+<button type="button" class="secondary" id="copy">Copiar texto</button>
+</div>
+<div class="status" id="status" aria-live="polite"></div>
+<section class="card" style="margin-top:13px">
+<h2>Prévia do relatório</h2><div id="preview">Seu relatório aparecerá aqui quando você tocar em “Gerar relatório”.</div>
+<button type="button" class="secondary wide" id="share">Compartilhar…</button>
+<button type="button" class="secondary wide" id="save">Salvar no histórico deste iPhone</button>
+</section>
+<section class="card">
+<h2>Histórico local</h2><p class="note">Fica salvo apenas neste aparelho e navegador. Exportar uma cópia é recomendado para backup.</p>
+<div class="actions"><button type="button" class="secondary" id="export">Exportar backup</button><button type="button" class="secondary" id="importBtn">Importar backup</button></div>
+<input type="file" id="importFile" accept="application/json,.json" hidden>
+<div id="history"></div>
+<button type="button" class="danger wide" id="clearHistory">Apagar histórico</button>
+</section>
+</main>
+<footer>Os dados ficam neste aparelho. O envio ao WhatsApp é manual: revise o relatório antes de compartilhar.</footer>
+<script src="app.js"></script>
+</body>
+</html>
