@@ -19,12 +19,28 @@ function num(s){
  const v=x.includes(",")?x.replace(/\./g,"").replace(",","."):x.replace(/\./g,"");
  return Number(v);
 }
-function stockNumber(s,type){
- const x=String(s??"").trim().replace(/\s/g,"");
- // No relatório de 2 horas, "954.601" é 954,601 t, conforme exemplo fornecido.
- // Uma única pontuação seguida por 3 algarismos, sem vírgula, é decimal nesse modelo.
- if(type==="simple" && /^\d+\.\d{3}$/.test(x))return Number(x);
- return num(x);
+// Todos os pontos digitados são separadores de milhares; vírgula é decimal.
+function stockNumber(s,type){return num(s)}
+// Formata durante a digitação, preservando a parte decimal e a posição do cursor.
+function groupNumber(raw){
+ const clean=String(raw).replace(/[^0-9,]/g,"");
+ const comma=clean.indexOf(",");
+ const integer=(comma===-1?clean:clean.slice(0,comma));
+ const decimals=comma===-1?"":clean.slice(comma+1).replace(/,/g,"");
+ const grouped=integer.replace(/\B(?=(\d{3})+(?!\d))/g,".");
+ return grouped+(comma===-1?"":","+decimals);
+}
+function formatNumberInput(el){
+ const before=el.value, caret=el.selectionStart??before.length;
+ const beforeFormatted=groupNumber(before.slice(0,caret));
+ const formatted=groupNumber(before);
+ if(formatted===before)return;
+ el.value=formatted;
+ try{el.setSelectionRange(beforeFormatted.length,beforeFormatted.length)}catch{}
+}
+const NUMERIC_IDS=["cota","vehicles","tonnes","dayVehicles","dayTonnes","production","da01","da02","color","ashes","humidity","sVehicles","sTonnes","sQueue","sDayVehicles","sDayTonnes","sDa01","sDa02","sTrips"];
+function normalizeSavedInputs(){
+ NUMERIC_IDS.forEach(id=>{const el=$(id);if(el&&el.value)el.value=groupNumber(el.value)});
 }
 function fmt(n,digits){return n.toLocaleString("pt-BR",{minimumFractionDigits:digits,maximumFractionDigits:digits,useGrouping:true})}
 function calc(){
@@ -135,7 +151,7 @@ function renderHistory(){
   info.append(title,sub);
   const buttons=document.createElement("div");buttons.style.cssText="display:flex;gap:6px";
   const load=document.createElement("button");load.textContent="Abrir";
-  load.onclick=()=>{fill(active,item.data);persist(active);reportText=item.report;$("preview").textContent=item.report;previewStale=false;$("status").textContent="Histórico carregado. Confira a data e os valores antes de enviar.";window.scrollTo(0,0)};
+  load.onclick=()=>{fill(active,item.data);normalizeSavedInputs();persist(active);reportText=item.report;$("preview").textContent=item.report;previewStale=false;$("status").textContent="Histórico carregado. Confira a data e os valores antes de enviar.";window.scrollTo(0,0)};
   const copy=document.createElement("button");copy.textContent="Copiar";copy.onclick=()=>copyText(item.report);
   buttons.append(load,copy);row.append(info,buttons);root.append(row);
  });
@@ -160,13 +176,14 @@ function migrate(){
 migrate();
 fill("full",read(draftKey("full"),null));
 fill("simple",read(draftKey("simple"),null));
+normalizeSavedInputs();
 refreshDate();
 document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>open(b.dataset.open));
 $("back").onclick=()=>{$("workspace").hidden=true;$("home").hidden=false;active=null;window.scrollTo(0,0)};
 document.querySelectorAll("[data-turn]").forEach(b=>b.onclick=()=>{turn.full=b.dataset.turn;updateTurnButtons("full");persist("full")});
 document.querySelectorAll("[data-simple-turn]").forEach(b=>b.onclick=()=>{turn.simple=b.dataset.simpleTurn;updateTurnButtons("simple");persist("simple")});
-FULL.forEach(id=>$(id).addEventListener("input",()=>{calc();persist("full")}));
-SIMPLE.forEach(id=>$(id).addEventListener("input",()=>{calc();persist("simple")}));
+FULL.forEach(id=>$(id).addEventListener("input",()=>{if(NUMERIC_IDS.includes(id))formatNumberInput($(id));calc();persist("full")}));
+SIMPLE.forEach(id=>$(id).addEventListener("input",()=>{if(NUMERIC_IDS.includes(id))formatNumberInput($(id));calc();persist("simple")}));
 document.querySelectorAll("[data-clean]").forEach(c=>c.addEventListener("change",()=>persist("full")));
 $("generate").onclick=generate;
 $("copy").onclick=()=>{ensureReport();copyText(reportText)};
@@ -193,11 +210,11 @@ $("importFile").onchange=async e=>{
   if(p.version===2&&p.histories){
    for(const type of ["full","simple"]){
     if(Array.isArray(p.histories[type]))write(historyKey(type),[...p.histories[type],...history(type)].slice(0,100));
-    if(p.drafts?.[type]){write(draftKey(type),p.drafts[type]);fill(type,p.drafts[type])}
+    if(p.drafts?.[type]){write(draftKey(type),p.drafts[type]);fill(type,p.drafts[type]);normalizeSavedInputs()}
    }
   }else if(Array.isArray(p.history)){
    write(historyKey("full"),[...p.history,...history("full")].slice(0,100));
-   if(p.draft){write(draftKey("full"),p.draft);fill("full",p.draft)}
+   if(p.draft){write(draftKey("full"),p.draft);fill("full",p.draft);normalizeSavedInputs()}
   }else throw Error("formato");
   refreshDate();renderHistory();previewStale=true;
   $("status").textContent="Backup importado. Confira os dados.";

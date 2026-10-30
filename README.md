@@ -1,25 +1,17 @@
-# Relatórios de Operação — atualização v3
+# Relatórios de Operação — atualização v4
 
-## Novidades
-- Tela inicial para escolher Relatório de Turno ou Relatório de 2 Horas.
-- Cada modelo lembra separadamente os últimos valores preenchidos, apenas no aparelho e navegador em uso.
-- Relatório de Turno: total de estoque sem casas decimais (ex.: 30.244.903 t).
-- Relatório de 2 Horas: total sem casas decimais (ex.: 1.050.710.802 t).
-- Data do Relatório de Turno atualizada ao abrir e ao voltar ao aplicativo.
-- Histórico separado por modelo, backup JSON de ambos, e migração dos dados locais da versão anterior.
-- Cache offline atualizado.
+## Novidade
+Os campos numéricos dos dois relatórios recebem separadores de milhares automaticamente enquanto são preenchidos: 123456789 vira 123.456.789. É possível digitar vírgula para casas decimais, por exemplo 30341,980 vira 30.341,980.
 
-## Atualizar GitHub Pages
-Envie os arquivos desta pasta para a RAIZ do repositório `relatorio-turno` no GitHub:
-`index.html`, `app.js`, `sw.js`, `manifest.webmanifest`, `README.md`, `icon-192.png`, `icon-512.png`.
-No GitHub: Add file > Upload files > arraste os arquivos > Commit changes.
-Quando perguntar se deseja substituir arquivos de mesmo nome, confirme. Não envie a pasta ou o ZIP inteiro.
-O endereço público continua o mesmo: https://pedroassano95-cmd.github.io/relatorio-turno/
+**Importante sobre a soma:** pontos são sempre separadores de milhares e vírgula indica decimais. Assim, 954.601 significa novecentos e cinquenta e quatro mil seiscentos e um; para 954,601 t digite `954,601`. Confira a escala antes de enviar. O total calculado dos dois relatórios é exibido sem casas decimais, conforme pedido anterior.
 
-## Importante
-Os dados são salvos localmente por origem/navegador, sem contas ou sincronização.
-Atualizar os arquivos no GitHub não apaga normalmente os dados locais, mas exporte um backup antes de atualizar.
-Não apague os dados do Safari/app instalado, pois isso pode eliminar os relatórios locais.
-Ao publicar a atualização, conecte o iPhone à internet, abra o app, feche e reabra para receber a nova versão.
-No relatório de 2 horas, a entrada DA01 954.601 é interpretada como 954,601 t (exemplo do usuário); DA02 30.341,980 é interpretada como 30.341,980 t, com total exibido sem casas decimais. Valores com um único ponto e três dígitos após ele são tratados como decimais no relatório simples. Confira entradas ambíguas.
-Confira a unidade e escala operacional antes de enviar.
+Os dados continuam salvos localmente, individualmente em cada aparelho, sem sincronização. A data do fechamento de turno é atualizada ao abrir. Os históricos e backups permanecem.
+
+## Como atualizar
+1. Extraia o ZIP.
+2. Entre em https://github.com/pedroassano95-cmd/relatorio-turno
+3. Add file > Upload files. Envie os 7 arquivos extraídos, substituindo os anteriores.
+4. Clique em Commit changes e aguarde o GitHub Pages atualizar.
+5. Abra https://pedroassano95-cmd.github.io/relatorio-turno/ no iPhone com internet, feche e abra novamente.
+
+Recomendação: exporte um backup no app antigo antes de atualizar. Não apague os dados do Safari ou do app instalado.
