@@ -69,7 +69,31 @@ function updateTurnButtons(type){
   b.classList.toggle("active",(b.dataset.turn||b.dataset.simpleTurn)===turn[type]);
  });
 }
-function persist(type){write(draftKey(type),data(type));previewStale=true}
+const SHARED_PAIRS=[['vehicles','sVehicles'],['tonnes','sTonnes'],['dayVehicles','sDayVehicles'],['dayTonnes','sDayTonnes'],['biomass','sBiomass'],['da01','sDa01'],['da02','sDa02']];
+let syncing=false;
+function syncShared(type,changedId){
+ if(syncing)return;
+ const pair=SHARED_PAIRS.find(p=>p.includes(changedId));if(!pair)return;
+ const source=type==='full'?pair[0]:pair[1],target=type==='full'?pair[1]:pair[0];
+ let v=$(source).value;
+ if(source==='sBiomass'&&target==='biomass'){
+  const opts=Array.from($(target).options).map(o=>o.value);
+  const match=opts.find(o=>o.toLowerCase()===v.trim().toLowerCase())||opts.find(o=>v.toLowerCase().includes(o.toLowerCase()));
+  if(!match)return;v=match;
+ }
+ $(target).value=v;
+ syncing=true;write(draftKey(type==='full'?'simple':'full'),data(type==='full'?'simple':'full'));syncing=false;
+ calc();
+}
+function reconcileShared(){
+ // Preserve preexisting values: fill empty shared fields only. New edits sync in both directions.
+ for(const [f,s] of SHARED_PAIRS){
+  if(!$(f).value&&$(s).value){if(f==='biomass'){const v=$(s).value.toLowerCase();const match=Array.from($(f).options).find(o=>v.includes(o.value.toLowerCase()));if(match)$(f).value=match.value}else $(f).value=$(s).value}
+  else if(!$(s).value&&$(f).value)$(s).value=$(f).value;
+ }
+ calc();
+}
+function persist(type,changedId){if(changedId)syncShared(type,changedId);write(draftKey(type),data(type));previewStale=true}
 function refreshDate(){
  // Only the complete report has a date. Always use the current local date upon reopening.
  const today=localDate();
@@ -177,13 +201,14 @@ migrate();
 fill("full",read(draftKey("full"),null));
 fill("simple",read(draftKey("simple"),null));
 normalizeSavedInputs();
+reconcileShared();
 refreshDate();
 document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>open(b.dataset.open));
 $("back").onclick=()=>{$("workspace").hidden=true;$("home").hidden=false;active=null;window.scrollTo(0,0)};
 document.querySelectorAll("[data-turn]").forEach(b=>b.onclick=()=>{turn.full=b.dataset.turn;updateTurnButtons("full");persist("full")});
 document.querySelectorAll("[data-simple-turn]").forEach(b=>b.onclick=()=>{turn.simple=b.dataset.simpleTurn;updateTurnButtons("simple");persist("simple")});
-FULL.forEach(id=>$(id).addEventListener("input",()=>{if(NUMERIC_IDS.includes(id))formatNumberInput($(id));calc();persist("full")}));
-SIMPLE.forEach(id=>$(id).addEventListener("input",()=>{if(NUMERIC_IDS.includes(id))formatNumberInput($(id));calc();persist("simple")}));
+FULL.forEach(id=>$(id).addEventListener("input",()=>{if(NUMERIC_IDS.includes(id))formatNumberInput($(id));calc();persist("full",id)}));
+SIMPLE.forEach(id=>$(id).addEventListener("input",()=>{if(NUMERIC_IDS.includes(id))formatNumberInput($(id));calc();persist("simple",id)}));
 document.querySelectorAll("[data-clean]").forEach(c=>c.addEventListener("change",()=>persist("full")));
 $("generate").onclick=generate;
 $("copy").onclick=()=>{ensureReport();copyText(reportText)};
@@ -226,6 +251,79 @@ $("clearHistory").onclick=()=>{
   localStorage.removeItem(historyKey(active));renderHistory();$("status").textContent="Histórico deste modelo apagado.";
  }
 };
+
+// SpeechRecognition is optional and depends on browser support and network availability.
+const SpeechAPI=window.SpeechRecognition||window.webkitSpeechRecognition;
+let recognizer=null,voiceCandidates=[];
+const voiceStatus=$('voiceStatus'),voiceReview=$('voiceReview'),voiceTranscript=$('voiceTranscript');
+function setVoiceStatus(t){voiceStatus.textContent=t}
+function endVoice(){ $('voiceStart').hidden=false;$('voiceStop').hidden=true;recognizer=null }
+$('voiceStart').onclick=()=>{
+ if(!SpeechAPI){setVoiceStatus('O reconhecimento de voz não está disponível neste navegador. Continue digitando ou use o microfone do teclado do iPhone.');return}
+ try{
+  recognizer=new SpeechAPI();recognizer.lang='pt-BR';recognizer.interimResults=false;recognizer.continuous=false;
+  recognizer.onresult=e=>{const t=Array.from(e.results).map(r=>r[0].transcript).join(' ');voiceTranscript.value=t;voiceReview.hidden=false;analyzeVoice();setVoiceStatus('Confira o texto e os valores antes de confirmar.')};
+  recognizer.onerror=e=>{setVoiceStatus('Não foi possível reconhecer a fala ('+e.error+'). Você pode continuar digitando normalmente.');endVoice()};
+  recognizer.onend=endVoice;recognizer.start();$('voiceStart').hidden=true;$('voiceStop').hidden=false;setVoiceStatus('Ouvindo... Fale um campo e seu valor de cada vez.')
+ }catch{endVoice();setVoiceStatus('Microfone indisponível. Use o preenchimento manual.')}
+};
+$('voiceStop').onclick=()=>{if(recognizer)recognizer.stop();endVoice()};
+function voiceNumber(raw){
+ let t=raw.toLowerCase().trim().replace(/\b(v[eé]iculos?|toneladas?|viagens?|t)\b/g,'').trim();
+ // Only accept digits, spelled-out simple numbers, and explicit comma decimals.
+ const words={zero:0,um:1,uma:1,dois:2,duas:2,tres:3,'três':3,quatro:4,cinco:5,seis:6,sete:7,oito:8,nove:9,dez:10,onze:11,doze:12,treze:13,quatorze:14,quinze:15,dezesseis:16,dezessete:17,dezoito:18,dezenove:19,vinte:20,trinta:30,quarenta:40,cinquenta:50,sessenta:60,setenta:70,oitenta:80,noventa:90,cem:100,cento:100,duzentos:200,trezentos:300,quatrocentos:400,quinhentos:500,seiscentos:600,setecentos:700,oitocentos:800,novecentos:900};
+ t=t.replace(/\b(v[ií]rgula)\b/g,',').replace(/\s+e\s+/g,' ');
+ if(/^[\d.,\s]+$/.test(t))return groupNumber(t.replace(/\s/g,''));
+ function parseWords(part){let total=0,partSum=0;for(const w of part.split(/\s+/).filter(Boolean)){if(w==='mil'){total+=(partSum||1)*1000;partSum=0}else if(w==='milh[aã]o'||w==='milhões'){total+=(partSum||1)*1000000;partSum=0}else if(words[w]!==undefined)partSum+=words[w];else return null}return total+partSum}
+ const parts=t.split(',');if(parts.length>2)return null;
+ const integer=parseWords(parts[0]);if(integer===null)return null;
+ if(parts.length===1)return groupNumber(String(integer));
+ const decimal=parts[1].trim();let digits;
+ if(/^\d+$/.test(decimal))digits=decimal;
+ else{const d=parseWords(decimal);if(d===null)return null;digits=String(d)}
+ return groupNumber(String(integer)+','+digits);
+}
+const VOICE_FIELDS=[
+ {re:/\bestoque\s*d\s*a\s*0?1\b/i,ids:['da01','sDa01'],name:'Estoque DA01'},
+ {re:/\bestoque\s*d\s*a\s*0?2\b/i,ids:['da02','sDa02'],name:'Estoque DA02'},
+ {re:/\b(?:total\s+de\s+)?ve[ií]culos?\s+(?:do|no)\s+dia\b|\btotal\s+do\s+dia\s+ve[ií]culos?\b/i,ids:['dayVehicles','sDayVehicles'],name:'Veículos do dia'},
+ {re:/\b(?:total\s+de\s+)?toneladas?\s+(?:do|no)\s+dia\b|\btotal\s+do\s+dia\s+toneladas?\b/i,ids:['dayTonnes','sDayTonnes'],name:'Toneladas do dia'},
+ {re:/\b(?:carregamento\s+de\s+a[cç][uú]car|ve[ií]culos?\s+(?:do|no)\s+turno)\b/i,ids:['vehicles','sVehicles'],name:'Veículos no turno'},
+ {re:/\b(?:expedido\s+(?:no|do)\s+turno|toneladas?\s+(?:no|do)\s+turno)\b/i,ids:['tonnes','sTonnes'],name:'Toneladas no turno'},
+ {re:/\b(?:carregamento\s+de\s+)?biomassa\b/i,ids:['biomass','sBiomass'],name:'Biomassa',text:true},
+ {re:/\b(?:ve[ií]culos?\s+na\s+)?fila\s+monitorada\b/i,ids:['sQueue'],name:'Fila monitorada'},
+ {re:/\b(?:n[uú]mero\s+de\s+)?viagens?\b/i,ids:['sTrips'],name:'Viagens'},
+ {re:/\bprodu[cç][aã]o\s+(?:do\s+)?turno\b/i,ids:['production'],name:'Produção do turno'},
+ {re:/\bcota\s+programada\b/i,ids:['cota'],name:'Cota programada'}
+];
+function analyzeVoice(){
+ const raw=voiceTranscript.value;voiceCandidates=[];
+ const found=[];
+ for(const f of VOICE_FIELDS){const m=f.re.exec(raw);if(m)found.push({...f,start:m.index,end:m.index+m[0].length})}
+ found.sort((a,b)=>a.start-b.start);
+ const root=$('voiceSuggestions');root.replaceChildren();
+ for(let i=0;i<found.length;i++){
+  const f=found[i];let chunk=raw.slice(f.end,found[i+1]?.start??raw.length).replace(/^[\s:;,.-]+|[\s:;,.-]+$/g,'');
+  let v=null;
+  if(f.text){const t=chunk.toLowerCase();v=t.includes('suspens')?'Suspenso':t.includes('andamento')?'Em andamento':t.includes('conclu')?'Concluído':t.includes('não realizado')?'Não realizado':null}
+  else v=voiceNumber(chunk);
+  if(v===null)continue;
+  const id=f.ids.find(id=>active==='full'?!id.startsWith('s'):(id.startsWith('s')));
+  if(!id)continue;
+  voiceCandidates.push({id,value:v,name:f.name});
+  const line=document.createElement('div');line.className='note';line.textContent=f.name+': '+v;root.append(line)
+ }
+ if(!voiceCandidates.length)root.textContent='Não foi possível identificar campos com segurança. Corrija o texto ou preencha digitando.';
+ $('voiceApply').hidden=!voiceCandidates.length;
+}
+$('voiceAnalyze').onclick=analyzeVoice;
+$('voiceApply').onclick=()=>{
+ if(!voiceCandidates.length)return;
+ if(!confirm('Aplicar os '+voiceCandidates.length+' valores identificados? Confira os números e a escala dos estoques.'))return;
+ for(const c of voiceCandidates){$(c.id).value=c.value;if(NUMERIC_IDS.includes(c.id))formatNumberInput($(c.id));persist(active,c.id)}
+ calc();voiceReview.hidden=true;setVoiceStatus('Campos preenchidos. Confira os valores antes de gerar o relatório.');$('status').textContent='Preenchimento por voz aplicado e campos em comum atualizados.';
+};
+
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)refreshDate()});
 window.addEventListener("pageshow",refreshDate);
 if("serviceWorker" in navigator&&location.protocol!=="file:"){

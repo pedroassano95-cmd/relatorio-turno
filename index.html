@@ -25,6 +25,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:0 18px 24px}
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
 .smallbutton{border:0;background:#e7eee8;color:var(--green2);border-radius:9px;padding:10px;font-weight:650}
 .report-tag{font-size:12px;color:var(--muted)}
+.voice-panel{border:1px solid #b7d7c2;background:#f2faf4;border-radius:13px;padding:14px;margin:12px 0}.voice-panel h2{margin-bottom:7px}.voice-panel p{font-size:13px;margin:7px 0}.voice-panel textarea{margin-top:8px}.voice-buttons{display:flex;gap:8px;flex-wrap:wrap}.voice-buttons button{flex:1}.voice-error{color:#9f2727;font-size:13px}
 </style></head>
 <body><header><h1>Relatórios de Operação</h1><p>Escolha o modelo, preencha e envie pelo WhatsApp.</p></header>
 <main>
@@ -32,7 +33,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:0 18px 24px}
 <section class="card"><h2>Qual relatório deseja preencher?</h2>
 <button type="button" class="choice" data-open="full"><strong>📋 Relatório de Turno</strong><span>Relatório completo dos turnos A, B e C</span></button>
 <button type="button" class="choice" data-open="simple"><strong>🕑 Relatório de 2 Horas</strong><span>Carregamento, estoques e transferência interna</span></button>
-<p class="note">Cada aparelho mantém seus próprios últimos dados. Os dois modelos são salvos separadamente.</p></section>
+<p class="note">Cada aparelho mantém seus próprios últimos dados. Os campos em comum dos dois modelos são atualizados automaticamente neste aparelho.</p></section>
 </div>
 <div id="workspace" hidden>
 <div class="topbar"><button class="smallbutton" type="button" id="back">← Escolher relatório</button><span class="report-tag" id="reportLabel"></span></div>
@@ -118,6 +119,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:0 18px 24px}
 <div class="field"><label for="sTrips">Número de viagens</label><input id="sTrips" inputmode="numeric" placeholder="Ex.: 0"></div>
 </section>
 </form>
+<section class="voice-panel" aria-label="Preenchimento opcional por voz"><h2>🎤 Preenchimento por voz (opcional)</h2><p>Você também pode continuar digitando normalmente. Fale o nome do campo e o valor, por exemplo: “Estoque DA01, 954 vírgula 601. Estoque DA02, 30 mil 341 vírgula 980.”</p><div class="voice-buttons"><button type="button" class="secondary" id="voiceStart">🎤 Falar informações</button><button type="button" class="secondary" id="voiceStop" hidden>■ Parar</button></div><div class="status" id="voiceStatus" aria-live="polite"></div><div id="voiceReview" hidden><label for="voiceTranscript">O que foi reconhecido (você pode corrigir)</label><textarea id="voiceTranscript" rows="4"></textarea><button type="button" class="secondary wide" id="voiceAnalyze">Identificar campos</button><div id="voiceSuggestions"></div><button type="button" class="primary wide" id="voiceApply" hidden>Confirmar e preencher campos</button></div></section>
 <div class="actions"><button type="button" class="primary" id="generate">Gerar relatório</button>
 <button type="button" class="secondary" id="copy">Copiar texto</button></div>
 <div class="status" id="status" aria-live="polite"></div>
@@ -133,4 +135,4 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:0 18px 24px}
 <div id="history"></div><button type="button" class="danger wide" id="clearHistory">Apagar histórico deste modelo</button></section>
 </div></main>
 <footer>Os dados ficam somente neste aparelho e neste aplicativo. Revise o relatório antes de enviar.</footer>
-<script src="app.js?v=4"></script></body></html>
+<script src="app.js?v=5"></script></body></html>
