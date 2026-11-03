@@ -2,7 +2,7 @@
 "use strict";
 const $=id=>document.getElementById(id);
 const FULL=["date","dds","cota","vehicles","tonnes","dayVehicles","dayTonnes","biomass","production","da01","da02","milling","belts","color","ashes","humidity","events","handover"];
-const SIMPLE=["sVehicles","sTonnes","sQueue","sDayVehicles","sDayTonnes","sBiomass","sDa01","sDa02","sTrips"];
+const SIMPLE=["sVehicles","sTonnes","sQueue","sWeighing","sLoading","sDayVehicles","sDayTonnes","sBiomass","sDa01","sDa02","sTrips"];
 const OLD_DRAFT="relatorioTurno.draft.v1", OLD_HISTORY="relatorioTurno.v1";
 const draftKey=t=>`relatoriosOperacao.${t}.draft.v2`;
 const historyKey=t=>`relatoriosOperacao.${t}.history.v2`;
@@ -38,7 +38,7 @@ function formatNumberInput(el){
  el.value=formatted;
  try{el.setSelectionRange(beforeFormatted.length,beforeFormatted.length)}catch{}
 }
-const NUMERIC_IDS=["cota","vehicles","tonnes","dayVehicles","dayTonnes","production","da01","da02","color","ashes","humidity","sVehicles","sTonnes","sQueue","sDayVehicles","sDayTonnes","sDa01","sDa02","sTrips"];
+const NUMERIC_IDS=["cota","vehicles","tonnes","dayVehicles","dayTonnes","production","da01","da02","color","ashes","humidity","sVehicles","sTonnes","sQueue","sWeighing","sLoading","sDayVehicles","sDayTonnes","sDa01","sDa02","sTrips"];
 function normalizeSavedInputs(){
  NUMERIC_IDS.forEach(id=>{const el=$(id);if(el&&el.value)el.value=groupNumber(el.value)});
 }
@@ -133,7 +133,9 @@ function buildFull(d){
 function buildSimple(d){
  return [
  `*Carregamento de Açúcar turno ${d.turn}:* ${value(d.sVehicles)} veículos - ${value(d.sTonnes)} t`,"",
- `${value(d.sQueue)} veículo(s) na fila monitorada`,"",
+ `${Number.isFinite(num(d.sQueue))?value(d.sQueue):"0"} veículo(s) na fila monitorada`,
+ ...(num(d.sWeighing)>0?[`${value(d.sWeighing)} veículo(s) com pesagem autorizada`]:[]),
+ ...(num(d.sLoading)>0?[`${value(d.sLoading)} veículo(s) em carregamento`]:[]),"",
  `*Total do dia:* ${value(d.sDayVehicles)} veículo(s) - ${value(d.sDayTonnes)} t`,
  "*_______________________*",
  `*Carregamento Biomassa ${d.turn}:* ${value(d.sBiomass)}`,
@@ -292,6 +294,8 @@ const VOICE_FIELDS=[
  {re:/\b(?:expedido\s+(?:no|do)\s+turno|toneladas?\s+(?:no|do)\s+turno)\b/i,ids:['tonnes','sTonnes'],name:'Toneladas no turno'},
  {re:/\b(?:carregamento\s+de\s+)?biomassa\b/i,ids:['biomass','sBiomass'],name:'Biomassa',text:true},
  {re:/\b(?:ve[ií]culos?\s+na\s+)?fila\s+monitorada\b/i,ids:['sQueue'],name:'Fila monitorada'},
+ {re:/\b(?:ve[ií]culos?\s+com\s+)?pesagem\s+autorizada\b/i,ids:['sWeighing'],name:'Pesagem autorizada'},
+ {re:/\b(?:ve[ií]culos?\s+)?em\s+carregamento\b/i,ids:['sLoading'],name:'Veículos em carregamento'},
  {re:/\b(?:n[uú]mero\s+de\s+)?viagens?\b/i,ids:['sTrips'],name:'Viagens'},
  {re:/\bprodu[cç][aã]o\s+(?:do\s+)?turno\b/i,ids:['production'],name:'Produção do turno'},
  {re:/\bcota\s+programada\b/i,ids:['cota'],name:'Cota programada'}

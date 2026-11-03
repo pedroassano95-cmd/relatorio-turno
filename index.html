@@ -101,7 +101,9 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:0 18px 24px}
 <div class="grid">
 <div class="field"><label for="sVehicles">Veículos no turno</label><input id="sVehicles" inputmode="numeric" placeholder="Ex.: 00"></div>
 <div class="field"><label for="sTonnes">Toneladas no turno (t)</label><input id="sTonnes" inputmode="decimal" placeholder="Ex.: 0"></div>
-<div class="field"><label for="sQueue">Veículos na fila monitorada</label><input id="sQueue" inputmode="numeric" placeholder="Ex.: 0"></div>
+<div class="field"><label for="sQueue">Veículos na fila monitorada (aparece mesmo com 0)</label><input id="sQueue" inputmode="numeric" placeholder="Ex.: 0"></div>
+<div class="field"><label for="sWeighing">Veículos com pesagem autorizada (oculto se 0)</label><input id="sWeighing" inputmode="numeric" placeholder="Ex.: 0"></div>
+<div class="field"><label for="sLoading">Veículos em carregamento (oculto se 0)</label><input id="sLoading" inputmode="numeric" placeholder="Ex.: 0"></div>
 <div class="field"><label for="sDayVehicles">Total de veículos no dia</label><input id="sDayVehicles" inputmode="numeric" placeholder="Ex.: 00"></div>
 </div>
 <div class="field"><label for="sDayTonnes">Total de toneladas no dia (t)</label><input id="sDayTonnes" inputmode="decimal" placeholder="Ex.: 0"></div>
@@ -135,4 +137,4 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:0 18px 24px}
 <div id="history"></div><button type="button" class="danger wide" id="clearHistory">Apagar histórico deste modelo</button></section>
 </div></main>
 <footer>Os dados ficam somente neste aparelho e neste aplicativo. Revise o relatório antes de enviar.</footer>
-<script src="app.js?v=5"></script></body></html>
+<script src="app.js?v=6"></script></body></html>
