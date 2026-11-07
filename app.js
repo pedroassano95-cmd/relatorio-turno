@@ -1,8 +1,8 @@
 
 "use strict";
 const $=id=>document.getElementById(id);
-const FULL=["date","dds","cota","vehicles","tonnes","dayVehicles","dayTonnes","biomass","production","da01","da02","milling","belts","color","ashes","humidity","events","handover"];
-const SIMPLE=["sVehicles","sTonnes","sQueue","sWeighing","sLoading","sDayVehicles","sDayTonnes","sBiomass","sDa01","sDa02","sTrips"];
+const FULL=["date","dds","cota","vehicles","tonnes","sugarQueue","sugarLoading","sugarInvoice","dayVehicles","dayTonnes","biomass","sugarStatus","sugarQueue","sugarLoading","sugarInvoice","bVehicles","bTonnes","bQueue","bLoading","bInvoice","production","da01","da02","milling","belts","color","ashes","humidity","events","handover"];
+const SIMPLE=["sVehicles","sTonnes","sQueue","sWeighing","sLoading","sDayVehicles","sDayTonnes","sBiomass","sSugarStatus","sbVehicles","sbTonnes","sbQueue","sbLoading","sbInvoice","sDa01","sDa02","sTrips"];
 const OLD_DRAFT="relatorioTurno.draft.v1", OLD_HISTORY="relatorioTurno.v1";
 const draftKey=t=>`relatoriosOperacao.${t}.draft.v2`;
 const historyKey=t=>`relatoriosOperacao.${t}.history.v2`;
@@ -38,7 +38,7 @@ function formatNumberInput(el){
  el.value=formatted;
  try{el.setSelectionRange(beforeFormatted.length,beforeFormatted.length)}catch{}
 }
-const NUMERIC_IDS=["cota","vehicles","tonnes","dayVehicles","dayTonnes","production","da01","da02","color","ashes","humidity","sVehicles","sTonnes","sQueue","sWeighing","sLoading","sDayVehicles","sDayTonnes","sDa01","sDa02","sTrips"];
+const NUMERIC_IDS=["cota","vehicles","tonnes","dayVehicles","dayTonnes","production","da01","da02","color","ashes","humidity","sVehicles","sTonnes","sQueue","sWeighing","sLoading","sDayVehicles","sDayTonnes","sDa01","sDa02","sTrips","bVehicles","bTonnes","bQueue","bLoading","bInvoice","sbVehicles","sbTonnes","sbQueue","sbLoading","sbInvoice"];
 function normalizeSavedInputs(){
  NUMERIC_IDS.forEach(id=>{const el=$(id);if(el&&el.value)el.value=groupNumber(el.value)});
 }
@@ -62,14 +62,14 @@ function fill(type,d){
  if(type==="full"){
   document.querySelectorAll("[data-clean]").forEach(c=>c.checked=d.clean?.[c.dataset.clean]??true);
  }
- updateTurnButtons(type);calc();
+ updateTurnButtons(type);calc();updateVisibility();
 }
 function updateTurnButtons(type){
  document.querySelectorAll(type==="full"?"[data-turn]":"[data-simple-turn]").forEach(b=>{
   b.classList.toggle("active",(b.dataset.turn||b.dataset.simpleTurn)===turn[type]);
  });
 }
-const SHARED_PAIRS=[['vehicles','sVehicles'],['tonnes','sTonnes'],['dayVehicles','sDayVehicles'],['dayTonnes','sDayTonnes'],['biomass','sBiomass'],['da01','sDa01'],['da02','sDa02']];
+const SHARED_PAIRS=[['vehicles','sVehicles'],['tonnes','sTonnes'],['dayVehicles','sDayVehicles'],['dayTonnes','sDayTonnes'],['biomass','sBiomass'],['sugarStatus','sSugarStatus'],['bVehicles','sbVehicles'],['bTonnes','sbTonnes'],['bQueue','sbQueue'],['bLoading','sbLoading'],['bInvoice','sbInvoice'],['da01','sDa01'],['da02','sDa02']];
 let syncing=false;
 function syncShared(type,changedId){
  if(syncing)return;
@@ -88,11 +88,31 @@ function syncShared(type,changedId){
 function reconcileShared(){
  // Preserve preexisting values: fill empty shared fields only. New edits sync in both directions.
  for(const [f,s] of SHARED_PAIRS){
-  if(!$(f).value&&$(s).value){if(f==='biomass'){const v=$(s).value.toLowerCase();const match=Array.from($(f).options).find(o=>v.includes(o.value.toLowerCase()));if(match)$(f).value=match.value}else $(f).value=$(s).value}
+  if(!$(f).value&&$(s).value){if(f==='biomass')$(f).value=statusValue($(s).value);else $(f).value=$(s).value}
   else if(!$(s).value&&$(f).value)$(s).value=$(f).value;
  }
  calc();
 }
+function statusValue(v){return /suspens|não realizado|conclu/i.test(String(v||''))?'Suspenso':'Ativo'}
+function normalizeStatus(){for(const id of ['biomass','sBiomass'])$(id).value=statusValue($(id).value);for(const id of ['sugarStatus','sSugarStatus'])if(!$(id).value)$(id).value='Ativo'}
+function updateVisibility(){
+ $('bioFullFields').hidden=$('biomass').value!=='Ativo';$('bioSimpleFields').hidden=$('sBiomass').value!=='Ativo';
+ for(const [id,fields] of [['sugarStatus',['vehicles','tonnes','sugarQueue','sugarLoading','sugarInvoice']],['sSugarStatus',['sVehicles','sTonnes','sQueue','sWeighing','sLoading']]]){
+  const hide=$(id).value==='Suspenso';fields.forEach(f=>{$(f).closest('.field').hidden=hide});
+ }
+}
+function count(v){return Number.isFinite(num(v))?num(v):0}
+function vehicleText(v){const n=count(v);return `${value(v||'0')} ${n===1?'veículo':'veículos'}`}
+function cargoLines(d,prefix){const v=d[prefix+'Vehicles'],t=d[prefix+'Tonnes'],q=d[prefix+'Queue'],l=d[prefix+'Loading'],i=d[prefix+'Invoice'];return [
+ `${vehicleText(v)} - ${value(t||'0')} t`,`${vehicleText(q)} na fila monitorada`,
+ ...(String(l||'').trim()?[`${vehicleText(l)} em carregamento`]:[]),
+ ...(String(i||'').trim()?[`${vehicleText(i)} em emissão de nota fiscal`]:[])]}
+function sugarLines(d,simple){const status=d[simple?'sSugarStatus':'sugarStatus'];if(status==='Suspenso')return ['Suspenso'];
+ const v=d[simple?'sVehicles':'vehicles'],t=d[simple?'sTonnes':'tonnes'];const lines=[`${vehicleText(v)} - ${value(t||'0')} t`];
+ if(!simple){lines.push(`${vehicleText(d.sugarQueue)} na fila monitorada`);if(String(d.sugarLoading||'').trim())lines.push(`${vehicleText(d.sugarLoading)} em carregamento`);if(String(d.sugarInvoice||'').trim())lines.push(`${vehicleText(d.sugarInvoice)} em emissão de nota fiscal`)}
+ if(simple){lines.push(`${vehicleText(d.sQueue)} na fila monitorada`);
+ if(String(d.sWeighing||'').trim())lines.push(`${vehicleText(d.sWeighing)} com pesagem autorizada`);
+ if(String(d.sLoading||'').trim())lines.push(`${vehicleText(d.sLoading)} em carregamento`)}return lines}
 function persist(type,changedId){if(changedId)syncShared(type,changedId);write(draftKey(type),data(type));previewStale=true}
 function refreshDate(){
  // Only the complete report has a date. Always use the current local date upon reopening.
@@ -107,47 +127,31 @@ function open(type){
  $("preview").textContent="Toque em “Gerar relatório” para ver o texto.";
  $("status").textContent="";reportText="";previewStale=true;
  if(type==="full")refreshDate();
- calc();renderHistory();window.scrollTo(0,0);
+ calc();updateVisibility();renderHistory();window.scrollTo(0,0);
 }
 function value(v){return String(v??"").trim()||"—"}
 function buildFull(d){
- const clean=Object.entries(d.clean||{}).map(([k,v])=>`${k}: ${v?"✅":"❌"}`).join("\n");
- const events=(d.events||"").split(/\n/).map(x=>x.trim()).filter(Boolean).join("\n\n");
- const next={A:"B",B:"C",C:"A"}[d.turn];
- const lines=[
- `*RELATÓRIO TURNO ${d.turn}*`,`*${dateBR(d.date)}*`,"",
- `*DDS: ${value(d.dds)}*`,"",`*Cota programada:* ${value(d.cota)} t`,"",
- "*Carregamento de açúcar*",`*Expedido - Turno ${d.turn}* ${value(d.vehicles)} veículos - ${value(d.tonnes)} t`,"",
+ const clean=Object.entries(d.clean||{}).map(([k,v])=>`${k}: ${v?'✅':'❌'}`).join('\n');
+ const events=(d.events||'').split(/\n/).map(x=>x.trim()).filter(Boolean).join('\n\n');
+ const next={A:'B',B:'C',C:'A'}[d.turn];
+ const lines=[`*RELATÓRIO TURNO ${d.turn}*`,`*${dateBR(d.date)}*`,'',`*DDS: ${value(d.dds)}*`,'',`*Cota programada:* ${value(d.cota)} t`,'',
+ '*Carregamento de açúcar*',`*Expedido - Turno ${d.turn}*`,...sugarLines(d,false),'',
  `*Total do dia:* ${value(d.dayVehicles)} veículos - ${value(d.dayTonnes)} t`,
- "*_______________________*",`*Carregamento Biomassa Turno ${d.turn}* ${value(d.biomass)}`,
- "*_______________________*",`*Produção do turno ${d.turn}:* ${value(d.production)}`,"",
- `*Estoque DA01:* ${value(d.da01)} t`,`*Estoque DA02:* ${value(d.da02)} t`,
- `*Total em estoque:* ${value($("stockTotal").value)} t`,"",
- "*🔹OPERAÇÃO🔹*","",`*Moagem:* ${value(d.milling)}`,"",`*Esteiras:* ${value(d.belts)}`,"",
- "*Limpeza do Setor:*",clean,"","*Analise VHP:*",
- `Cor: ${value(d.color)}`,`Cinzas: ${value(d.ashes)}`,`Umidade: ${value(d.humidity)}`,"",
- "*🔺Ocorrências*","",events||"—"];
- if(d.handover!=="none")lines.push("",`Passando para o Turno *${next}*`,"Bom trabalho a todos🙏🏻");
- return lines.join("\n");
+ '*_______________________*',`*Carregamento Biomassa Turno ${d.turn}*`,...(d.biomass==='Ativo'?cargoLines(d,'b'):['Suspenso']),
+ '*_______________________*',`*Produção do turno ${d.turn}:* ${value(d.production)}`,'',
+ `*Estoque DA01:* ${value(d.da01)} t`,`*Estoque DA02:* ${value(d.da02)} t`,`*Total em estoque:* ${value($('stockTotal').value)} t`,'',
+ '*🔹OPERAÇÃO🔹*','',`*Moagem:* ${value(d.milling)}`,'',`*Esteiras:* ${value(d.belts)}`,'',
+ '*Limpeza do Setor:*',clean,'','*Analise VHP:*',`Cor: ${value(d.color)}`,`Cinzas: ${value(d.ashes)}`,`Umidade: ${value(d.humidity)}`,'',
+ '*🔺Ocorrências*','',events||'—'];
+ if(d.handover!=='none')lines.push('',`Passando para o Turno *${next}*`,'Bom trabalho a todos🙏🏻');
+ return lines.join('\n');
 }
-function buildSimple(d){
- return [
- `*Carregamento de Açúcar turno ${d.turn}:* ${value(d.sVehicles)} veículos - ${value(d.sTonnes)} t`,"",
- `${Number.isFinite(num(d.sQueue))?value(d.sQueue):"0"} veículo(s) na fila monitorada`,
- ...(num(d.sWeighing)>0?[`${value(d.sWeighing)} veículo(s) com pesagem autorizada`]:[]),
- ...(num(d.sLoading)>0?[`${value(d.sLoading)} veículo(s) em carregamento`]:[]),"",
- `*Total do dia:* ${value(d.sDayVehicles)} veículo(s) - ${value(d.sDayTonnes)} t`,
- "*_______________________*",
- `*Carregamento Biomassa ${d.turn}:* ${value(d.sBiomass)}`,
- "*_______________________*",
- `*Estoque DA01:* ${value(d.sDa01)} t`,
- `*Estoque DA02:* ${value(d.sDa02)} t`,
- `*Total:* ${value($("sStockTotal").value)} t`,
- "*_______________________*",
- "🔄 *Transferência vira interno DA01 para DA02*",
- `*Viagem:* ${value(d.sTrips)} viagens`
- ].join("\n");
-}
+function buildSimple(d){return [
+ `*Carregamento de Açúcar turno ${d.turn}:*`,...sugarLines(d,true),'',
+ `*Total do dia:* ${value(d.sDayVehicles)} veículos - ${value(d.sDayTonnes)} t`,
+ '*_______________________*',`*Carregamento Biomassa ${d.turn}:*`,...(d.sBiomass==='Ativo'?cargoLines(d,'sb'):['Suspenso']),
+ '*_______________________*',`*Estoque DA01:* ${value(d.sDa01)} t`,`*Estoque DA02:* ${value(d.sDa02)} t`,`*Total:* ${value($('sStockTotal').value)} t`,
+ '*_______________________*','🔄 *Transferência vira interno DA01 para DA02*',`*Viagem:* ${value(d.sTrips)} viagens`].join('\n')}
 function generate(){
  if(!active)return;
  calc();reportText=active==="full"?buildFull(data("full")):buildSimple(data("simple"));
@@ -203,14 +207,16 @@ migrate();
 fill("full",read(draftKey("full"),null));
 fill("simple",read(draftKey("simple"),null));
 normalizeSavedInputs();
+normalizeStatus();
 reconcileShared();
+normalizeStatus();updateVisibility();
 refreshDate();
 document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>open(b.dataset.open));
 $("back").onclick=()=>{$("workspace").hidden=true;$("home").hidden=false;active=null;window.scrollTo(0,0)};
 document.querySelectorAll("[data-turn]").forEach(b=>b.onclick=()=>{turn.full=b.dataset.turn;updateTurnButtons("full");persist("full")});
 document.querySelectorAll("[data-simple-turn]").forEach(b=>b.onclick=()=>{turn.simple=b.dataset.simpleTurn;updateTurnButtons("simple");persist("simple")});
-FULL.forEach(id=>$(id).addEventListener("input",()=>{if(NUMERIC_IDS.includes(id))formatNumberInput($(id));calc();persist("full",id)}));
-SIMPLE.forEach(id=>$(id).addEventListener("input",()=>{if(NUMERIC_IDS.includes(id))formatNumberInput($(id));calc();persist("simple",id)}));
+FULL.forEach(id=>$(id).addEventListener("input",()=>{if(NUMERIC_IDS.includes(id))formatNumberInput($(id));calc();updateVisibility();persist("full",id)}));
+SIMPLE.forEach(id=>$(id).addEventListener("input",()=>{if(NUMERIC_IDS.includes(id))formatNumberInput($(id));calc();updateVisibility();persist("simple",id)}));
 document.querySelectorAll("[data-clean]").forEach(c=>c.addEventListener("change",()=>persist("full")));
 $("generate").onclick=generate;
 $("copy").onclick=()=>{ensureReport();copyText(reportText)};
@@ -243,7 +249,7 @@ $("importFile").onchange=async e=>{
    write(historyKey("full"),[...p.history,...history("full")].slice(0,100));
    if(p.draft){write(draftKey("full"),p.draft);fill("full",p.draft);normalizeSavedInputs()}
   }else throw Error("formato");
-  refreshDate();renderHistory();previewStale=true;
+  normalizeStatus();updateVisibility();refreshDate();renderHistory();previewStale=true;
   $("status").textContent="Backup importado. Confira os dados.";
  }catch{$("status").textContent="Arquivo de backup inválido."}
  e.target.value="";

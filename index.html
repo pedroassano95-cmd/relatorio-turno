@@ -51,13 +51,14 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:0 18px 24px}
 </section>
 <section class="card">
 <h2>2. Carregamento e produção</h2>
+<div class="field"><label for="sugarStatus">Situação do carregamento de açúcar</label><select id="sugarStatus"><option value="Ativo">Ativo</option><option value="Suspenso">Suspenso</option></select></div>
 <div class="grid">
 <div class="field"><label for="vehicles">Veículos no turno</label><input id="vehicles" placeholder="Ex.: 08"></div>
 <div class="field"><label for="tonnes">Expedido no turno (t)</label><input id="tonnes" placeholder="Ex.: 354.840"></div>
-<div class="field"><label for="dayVehicles">Veículos no dia</label><input id="dayVehicles" placeholder="Ex.: 13"></div>
+<div class="field"><label for="sugarQueue">Veículos na fila monitorada</label><input id="sugarQueue" inputmode="numeric" placeholder="0"></div><div class="field"><label for="sugarLoading">Veículos em carregamento (opcional)</label><input id="sugarLoading" inputmode="numeric"></div><div class="field"><label for="sugarInvoice">Veículos emitindo nota fiscal (opcional)</label><input id="sugarInvoice" inputmode="numeric"></div><div class="field"><label for="dayVehicles">Veículos no dia</label><input id="dayVehicles" placeholder="Ex.: 13"></div>
 <div class="field"><label for="dayTonnes">Toneladas no dia</label><input id="dayTonnes" placeholder="Ex.: 592.420"></div>
 </div>
-<div class="field"><label for="biomass">Carregamento de biomassa</label><select id="biomass"><option>Suspenso</option><option>Em andamento</option><option>Concluído</option><option>Não realizado</option></select></div>
+<div class="field"><label for="biomass">Carregamento de biomassa</label><select id="biomass"><option>Suspenso</option><option>Ativo</option></select></div><div id="bioFullFields" class="grid" hidden><div class="field"><label for="bVehicles">Veículos expedidos</label><input id="bVehicles" inputmode="decimal" placeholder="0"></div><div class="field"><label for="bTonnes">Toneladas expedidas (t)</label><input id="bTonnes" inputmode="decimal" placeholder="0"></div><div class="field"><label for="bQueue">Veículos na fila monitorada</label><input id="bQueue" inputmode="decimal" placeholder="0"></div><div class="field"><label for="bLoading">Veículos em carregamento</label><input id="bLoading" inputmode="decimal" placeholder="Opcional"></div><div class="field"><label for="bInvoice">Veículos emitindo nota fiscal</label><input id="bInvoice" inputmode="decimal" placeholder="Opcional"></div></div>
 <div class="field"><label for="production">Produção do turno</label><input id="production" placeholder="Ex.: 125.175"></div>
 </section>
 <section class="card">
@@ -98,6 +99,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:0 18px 24px}
 <button type="button" data-simple-turn="A" class="active">Turno A</button>
 <button type="button" data-simple-turn="B">Turno B</button>
 <button type="button" data-simple-turn="C">Turno C</button></div></div>
+<div class="field"><label for="sSugarStatus">Situação do carregamento de açúcar</label><select id="sSugarStatus"><option value="Ativo">Ativo</option><option value="Suspenso">Suspenso</option></select></div>
 <div class="grid">
 <div class="field"><label for="sVehicles">Veículos no turno</label><input id="sVehicles" inputmode="numeric" placeholder="Ex.: 00"></div>
 <div class="field"><label for="sTonnes">Toneladas no turno (t)</label><input id="sTonnes" inputmode="decimal" placeholder="Ex.: 0"></div>
@@ -107,7 +109,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:0 18px 24px}
 <div class="field"><label for="sDayVehicles">Total de veículos no dia</label><input id="sDayVehicles" inputmode="numeric" placeholder="Ex.: 00"></div>
 </div>
 <div class="field"><label for="sDayTonnes">Total de toneladas no dia (t)</label><input id="sDayTonnes" inputmode="decimal" placeholder="Ex.: 0"></div>
-<div class="field"><label for="sBiomass">Carregamento de biomassa</label><input id="sBiomass" placeholder="Ex.: Carregamento Suspenso"></div>
+<div class="field"><label for="sBiomass">Carregamento de biomassa</label><select id="sBiomass"><option>Suspenso</option><option>Ativo</option></select></div><div id="bioSimpleFields" class="grid" hidden><div class="field"><label for="sbVehicles">Veículos expedidos</label><input id="sbVehicles" inputmode="decimal" placeholder="0"></div><div class="field"><label for="sbTonnes">Toneladas expedidas (t)</label><input id="sbTonnes" inputmode="decimal" placeholder="0"></div><div class="field"><label for="sbQueue">Veículos na fila monitorada</label><input id="sbQueue" inputmode="decimal" placeholder="0"></div><div class="field"><label for="sbLoading">Veículos em carregamento</label><input id="sbLoading" inputmode="decimal" placeholder="Opcional"></div><div class="field"><label for="sbInvoice">Veículos emitindo nota fiscal</label><input id="sbInvoice" inputmode="decimal" placeholder="Opcional"></div></div>
 </section>
 <section class="card"><h2>2. Estoques</h2>
 <div class="grid">
@@ -137,4 +139,4 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:0 18px 24px}
 <div id="history"></div><button type="button" class="danger wide" id="clearHistory">Apagar histórico deste modelo</button></section>
 </div></main>
 <footer>Os dados ficam somente neste aparelho e neste aplicativo. Revise o relatório antes de enviar.</footer>
-<script src="app.js?v=6"></script></body></html>
+<script src="app.js?v=7"></script></body></html>
